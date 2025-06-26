@@ -904,7 +904,7 @@ class App:
         list_x = []
         for spl_id in spells:
             list_x.append(len(t1))
-            t1 += self.spells[spl_id][0] + " "
+            t1 += self.spells[spl_id].name + " "
         self.bt_msg = ["なにを つかいますか？", t1, f" MP {pad(mp,2)}"]
         if not self.cur:
             self.cur = Cursor("bt_spells", list_x, 12, -1)
