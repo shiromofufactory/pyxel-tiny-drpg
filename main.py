@@ -359,8 +359,9 @@ class App:
                 if ret >= 0:
                     spl_id = self.available_spells()[ret]
                     spl = self.spells[spl_id]
-                    if spl.mp and spl.mp <= self.pl.mp and spl.on_menu:
-                        self.pl.mp -= spl.mp
+                    mp = spl.get_mp(self.pl)
+                    if mp and mp <= self.pl.mp and spl.on_menu:
+                        self.pl.mp -= mp
                         if spl_id == SPELL_RETURN:
                             Window.close()
                             self.cur = None
@@ -368,7 +369,7 @@ class App:
                             px.play(3, 36)
                             return
                         elif spl_id == SPELL_HEAL:
-                            self.use_heal(spl.mp)
+                            self.use_heal(mp)
                             self.menu_spells()
                 else:
                     Window.close()
@@ -428,19 +429,20 @@ class App:
                 if ret >= 0:
                     spl_id = self.available_spells(True)[ret]
                     spl = self.spells[spl_id]
-                    if spl.mp and spl.mp <= self.pl.mp:
-                        self.pl.mp -= spl.mp
+                    mp = spl.get_mp(self.pl)
+                    if mp and mp <= self.pl.mp:
+                        self.pl.mp -= mp
                         self.cur = None
                         self.bt_msg = [f"{self.pl.name}は {spl.name}をとなえた"]
                         if spl_id == SPELL_FIRE:
                             dmg = 0 if self.ms.resist else px.rndi(24, 30)
                             self.battle_damage(self.ms, dmg)
                         elif spl_id == SPELL_HEAL:
-                            ret = self.use_heal(spl.mp)
+                            ret = self.use_heal(mp)
                             self.bt_msg += [f"{ret}HP かいふくした"]
                         elif spl_id == SPELL_BURST:
                             dmg = 0
-                            for _ in range(spl.mp):
+                            for _ in range(mp):
                                 dmg += px.rndi(8, 12)
                             self.battle_damage(self.ms, dmg)
                         self.battle_show()
