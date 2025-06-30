@@ -11,7 +11,6 @@ import copy
 IS_WEB = True
 
 try:
-    import js
     from js import window
 except:
     IS_WEB = False
@@ -165,6 +164,15 @@ class Spell:
 ### ユーティリティ関数 ###
 
 
+# 全角化
+def zen(val):
+    h2z = str.maketrans(
+        " 1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ /+-:*#()[]",
+        "　１２３４５６７８９０ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ　／＋－：＊＃（）［］",
+    )
+    return str(val).translate(h2z)
+
+
 # テキスト描画
 def draw_text(x, y, t):
     px.text(x * 8, y * 8 + 4, zen(t), 7, BDF)
@@ -178,31 +186,14 @@ def get_data_file():
 # ボタン取得
 def get_btn_state():
     btn = {
-        "u": px.btn(px.KEY_UP)
-        or px.btn(px.KEY_K)
-        or px.btn(px.GAMEPAD1_BUTTON_DPAD_UP),
-        "d": px.btn(px.KEY_DOWN)
-        or px.btn(px.KEY_J)
-        or px.btn(px.GAMEPAD1_BUTTON_DPAD_DOWN),
-        "l": px.btn(px.KEY_LEFT)
-        or px.btn(px.KEY_H)
-        or px.btn(px.GAMEPAD1_BUTTON_DPAD_LEFT),
-        "r": px.btn(px.KEY_RIGHT)
-        or px.btn(px.KEY_L)
-        or px.btn(px.GAMEPAD1_BUTTON_DPAD_RIGHT),
+        "u": px.btn(px.KEY_UP) or px.btn(px.GAMEPAD1_BUTTON_DPAD_UP),
+        "d": px.btn(px.KEY_DOWN) or px.btn(px.GAMEPAD1_BUTTON_DPAD_DOWN),
+        "l": px.btn(px.KEY_LEFT) or px.btn(px.GAMEPAD1_BUTTON_DPAD_LEFT),
+        "r": px.btn(px.KEY_RIGHT) or px.btn(px.GAMEPAD1_BUTTON_DPAD_RIGHT),
         "a": px.btnp(px.KEY_Z, 10, 2) or px.btnp(px.GAMEPAD1_BUTTON_A, 10, 2),
         "b": px.btnp(px.KEY_X, 10, 2) or px.btnp(px.GAMEPAD1_BUTTON_B, 10, 2),
     }
     return btn
-
-
-# 全角化
-def zen(val):
-    h2z = str.maketrans(
-        " 1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ /+-:*#()[]",
-        "　１２３４５６７８９０ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ　／＋－：＊＃（）［］",
-    )
-    return str(val).translate(h2z)
 
 
 # パディング左よせ
@@ -285,7 +276,7 @@ class App:
             ["だてんし", 200, 0, 20, 27, 1, 6, 0],
             ["めがみ", 400, 0, 99, 99, 0, 7, 0],
         )
-        # 呪文データ（Spellクラスのインスタンスリストに変更）
+        # 呪文データ
         self.spells = [
             Spell(
                 "ファイア", 2, False, ["ちいさな ひのたまを", "てきにぶつけて ダメージ"]
@@ -500,13 +491,13 @@ class App:
         # フィールド用draw処理
         elif self.scene == "field":
             # マップ
-            x, y = (self.x * 16 + self.dx - 48, self.y * 16 + self.dy - 48)
-            px.bltm(8, 0, self.z, x, y, 112, 112)
-            pl_x, pl_y = self.x * 16 + self.dx, self.y * 16 + self.dy
+            x, y = (self.x * 16 + self.dx, self.y * 16 + self.dy)
+            px.bltm(8, 0, self.z, x - 48, y - 48, 112, 112)
+            # 障害物（NPC含む）
             for key in self.obstacles:
                 if not key in self.flags:
                     ob = self.obstacles[key]
-                    ob.draw(pl_x, pl_y, self.z)
+                    ob.draw(x, y, self.z)
             # マスク
             px.blt(0, -8, 0, 64, 0, 64, 64, 1)
             px.blt(64, -8, 0, 64, 0, -64, 64, 1)
@@ -663,7 +654,7 @@ class App:
 
     ### フィールド関連 ###
 
-    # 現在地のタイル取得
+    # 移動先のイベントorタイル状態取得
     @property
     def event(self):
         x = self.x + self.dx
